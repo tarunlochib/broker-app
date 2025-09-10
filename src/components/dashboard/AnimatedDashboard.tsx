@@ -12,7 +12,7 @@ interface Application {
   loanAmount: number | null;
   propertyAddress: string | null;
   createdAt: Date;
-  documents: any[];
+  documents: { id: string; fileName: string; status: string; createdAt: Date }[];
 }
 
 interface DashboardProps {
@@ -22,7 +22,7 @@ interface DashboardProps {
   userName?: string;
 }
 
-export function AnimatedDashboard({ apps, countBy, role, userName }: DashboardProps) {
+export function AnimatedDashboard({ apps, countBy, role }: DashboardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
@@ -102,7 +102,7 @@ export function AnimatedDashboard({ apps, countBy, role, userName }: DashboardPr
       <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${
         role === 'borrower' ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
       }`}>
-        {kpiCards.map((card, index) => (
+        {kpiCards.map((card) => (
           <div
             key={card.id}
             className={`transform transition-all duration-700 ease-out ${

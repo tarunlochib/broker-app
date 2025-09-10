@@ -47,7 +47,7 @@ export const authConfig: AuthOptions = {
         if (!result.accepted?.length) {
           throw new Error("Email not accepted by SMTP");
         }
-        const preview = nodemailer.getTestMessageUrl(result as any);
+        const preview = nodemailer.getTestMessageUrl(result);
         if (preview) console.log("Magic link preview URL:", preview);
       },
     }),
@@ -60,28 +60,31 @@ export const authConfig: AuthOptions = {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
         if (!email || !password) return null;
-        const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, name: true, role: true, passwordHash: true } as any });
+        const user = await prisma.user.findUnique({ 
+          where: { email }, 
+          select: { id: true, email: true, name: true, role: true, passwordHash: true } 
+        });
         if (!user?.passwordHash) return null;
-        const ok = await bcrypt.compare(password as string, user.passwordHash as unknown as string);
+        const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.name, role: user.role } as any;
+        return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
     }),
   ],
   callbacks: {
-    async session({ session, user, token }: any) {
+    async session({ session, user, token }: { session: any; user?: any; token?: any }) {
       if (session.user) {
         // For email sign-in via adapter 'user' is defined; for credentials it's on token
-        const role = (user as any)?.role ?? (token as any)?.role ?? "borrower";
-        (session.user as any).role = role;
-        (session.user as any).id = (user as any)?.id ?? (token as any)?.id;
+        const role = user?.role ?? token?.role ?? "borrower";
+        session.user.role = role;
+        session.user.id = user?.id ?? token?.id;
       }
       return session;
     },
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
-        (token as any).role = (user as any).role;
-        (token as any).id = (user as any).id;
+        token.role = user.role;
+        token.id = user.id;
       }
       return token;
     },

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   const session = await requireAuth();
-  const userId = (session.user as any).id as string;
+  const userId = (session.user as { id: string }).id;
   
   try {
     const { currentPassword, newPassword } = await req.json();

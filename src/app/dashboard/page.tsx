@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { HeroSection } from "@/components/dashboard/HeroSection";
@@ -6,8 +5,8 @@ import { AnimatedDashboard } from "@/components/dashboard/AnimatedDashboard";
 
 export default async function DashboardPage() {
   const session = await requireAuth();
-  const userId = (session.user as any).id as string;
-  const role = (session.user as any).role as string;
+  const userId = (session.user as { id: string }).id;
+  const role = (session.user as { role?: string }).role ?? "borrower";
 
   const [apps, totals] = await Promise.all([
     prisma.application.findMany({

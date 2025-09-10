@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const session = await requireAuth();
-  const userId = (session.user as any).id as string;
+  const userId = (session.user as { id: string }).id;
   
   try {
     const form = await req.formData();
