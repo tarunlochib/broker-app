@@ -24,6 +24,61 @@ export async function POST(
   return await updateApplicationStatus(req, params);
 }
 
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
+  
+  try {
+    const session = await requireAuth();
+    const userId = (session.user as { id: string }).id;
+    
+    // Check if the application belongs to the user
+    const application = await prisma.application.findUnique({
+      where: { id },
+      select: { userId: true, status: true }
+    });
+    
+    if (!application) {
+      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    }
+    
+    // Only allow users to delete their own draft applications
+    if (application.userId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    
+    // Only allow deletion of draft applications
+    if (application.status !== "draft") {
+      return NextResponse.json({ error: "Only draft applications can be deleted" }, { status: 400 });
+    }
+    
+    // Delete the application (cascade will handle related records)
+    await prisma.application.delete({
+      where: { id }
+    });
+    
+    // Log the deletion
+    await prisma.auditLog.create({
+      data: {
+        action: "application_deleted",
+        meta: {
+          applicationId: id,
+          userId: userId,
+        }
+      }
+    });
+    
+    // Redirect to applications list
+    return NextResponse.redirect(new URL("/applications", req.url));
+  } catch (error) {
+    console.error("Error deleting application:", error);
+    return NextResponse.json({ error: "Failed to delete application" }, { status: 500 });
+  }
+}
+
 async function updateApplicationDetails(
   req: Request,
   params: Promise<{ id: string }>
