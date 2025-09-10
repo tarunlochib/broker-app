@@ -4,12 +4,12 @@ import { requireRole } from "@/lib/auth";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireRole(["broker", "admin"]);
     
-    const { id } = params;
+    const { id } = await params;
     const { status, notes } = await req.json();
 
     if (!status) {
@@ -66,12 +66,12 @@ export async function PATCH(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireRole(["broker", "admin"]);
     
-    const { id } = params;
+    const { id } = await params;
 
     const document = await prisma.document.findUnique({
       where: { id },
