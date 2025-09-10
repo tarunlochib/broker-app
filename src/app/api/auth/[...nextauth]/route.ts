@@ -72,19 +72,19 @@ export const authConfig: AuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user, token }: { session: { user?: { role?: string; id?: string } }; user?: { role?: string; id?: string }; token?: { role?: string; id?: string } }) {
+    async session({ session, user, token }) {
       if (session.user) {
         // For email sign-in via adapter 'user' is defined; for credentials it's on token
-        const role = user?.role ?? token?.role ?? "borrower";
-        session.user.role = role;
-        session.user.id = user?.id ?? token?.id;
+        const role = (user as any)?.role ?? (token as any)?.role ?? "borrower";
+        (session.user as any).role = role;
+        (session.user as any).id = user?.id ?? token?.id;
       }
       return session;
     },
-    async jwt({ token, user }: { token: { role?: string; id?: string }; user?: { role?: string; id?: string } }) {
+    async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.id = user.id;
+        (token as any).role = (user as any).role;
+        (token as any).id = (user as any).id;
       }
       return token;
     },

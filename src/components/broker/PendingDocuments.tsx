@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 interface PendingDocumentsProps {
-  documents: any[];
+  documents: { id: string; fileName: string; status: string; createdAt: Date; category?: string; application: { id: string; propertyAddress: string | null; firstName?: string | null; lastName?: string | null; user?: { name: string | null } } }[];
 }
 
 export function PendingDocuments({ documents }: PendingDocumentsProps) {
@@ -117,7 +117,7 @@ export function PendingDocuments({ documents }: PendingDocumentsProps) {
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                       <div className="text-yellow-600">
-                        {getCategoryIcon(doc.category)}
+                        {getCategoryIcon(doc.category || 'other')}
                       </div>
                     </div>
                   </div>
@@ -127,7 +127,7 @@ export function PendingDocuments({ documents }: PendingDocumentsProps) {
                         {doc.fileName}
                       </h4>
                       <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                        {doc.category}
+                        {doc.category || 'Other'}
                       </span>
                     </div>
                     <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">

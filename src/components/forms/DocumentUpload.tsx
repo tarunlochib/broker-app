@@ -147,8 +147,8 @@ export function DocumentUpload({
       
       // Reset category selection
       setSelectedCategory("");
-    } catch (err: any) {
-      setError(err.message || "Upload failed");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Upload failed");
     } finally {
       setUploading(false);
     }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 interface TopClientsProps {
-  clients: any[];
+  clients: { id: string; name: string | null; email: string; applications: { loanAmount: number | null }[] }[];
 }
 
 export function TopClients({ clients }: TopClientsProps) {
@@ -15,6 +15,13 @@ export function TopClients({ clients }: TopClientsProps) {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Calculate metrics for each client
+  const clientsWithMetrics = clients.map(client => ({
+    ...client,
+    totalLoanVolume: client.applications.reduce((sum, app) => sum + (app.loanAmount || 0), 0),
+    applicationCount: client.applications.length,
+  })).sort((a, b) => b.totalLoanVolume - a.totalLoanVolume);
 
   const getRankIcon = (index: number) => {
     switch (index) {
@@ -68,7 +75,7 @@ export function TopClients({ clients }: TopClientsProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {clients.map((client, index) => (
+          {clientsWithMetrics.map((client, index) => (
             <div
               key={client.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
@@ -100,7 +107,7 @@ export function TopClients({ clients }: TopClientsProps) {
         </div>
       )}
 
-      {clients.length > 0 && (
+      {clientsWithMetrics.length > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-200">
           <Link
             href="/clients"

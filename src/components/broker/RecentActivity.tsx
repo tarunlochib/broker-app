@@ -1,7 +1,7 @@
 "use client";
 
 interface RecentActivityProps {
-  activities: any[];
+  activities: { id: string; type: string; description: string; createdAt: Date; user: { name: string | null; email?: string }; application?: { firstName?: string | null; lastName?: string | null }; content?: string }[];
 }
 
 export function RecentActivity({ activities }: RecentActivityProps) {
@@ -15,7 +15,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
     });
   };
 
-  const getActivityIcon = (activity: any) => {
+  const getActivityIcon = (activity: { type: string }) => {
     return (
       <div className="flex-shrink-0">
         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -27,7 +27,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
     );
   };
 
-  const getActivityDescription = (activity: any) => {
+  const getActivityDescription = (activity: { type: string; description: string; createdAt: Date; user: { name: string | null; email?: string }; application?: { firstName?: string | null; lastName?: string | null }; content?: string }) => {
     const userName = activity.user?.name || activity.user?.email || 'Unknown User';
     const clientName = activity.application?.firstName && activity.application?.lastName
       ? `${activity.application.firstName} ${activity.application.lastName}`

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 interface ClientManagementProps {
-  clients: any[];
+  clients: { id: string; name: string | null; email: string; createdAt: Date; applications: { id: string; status: string; loanAmount: number | null; createdAt: Date }[] }[];
 }
 
 export function ClientManagement({ clients }: ClientManagementProps) {
@@ -23,7 +23,7 @@ export function ClientManagement({ clients }: ClientManagementProps) {
     });
   };
 
-  const getClientStatus = (applications: any[]) => {
+  const getClientStatus = (applications: { status: string }[]) => {
     if (applications.length === 0) return { label: 'No Applications', color: 'gray' };
     
     const latestApp = applications[0];
@@ -168,7 +168,7 @@ export function ClientManagement({ clients }: ClientManagementProps) {
                     <div className="mt-4 pl-16">
                       <div className="text-xs text-gray-500 mb-2">Recent Applications:</div>
                       <div className="space-y-1">
-                        {client.applications.slice(0, 3).map((app: any) => (
+                        {client.applications.slice(0, 3).map((app: { id: string; status: string; loanAmount: number | null; createdAt: Date }) => (
                           <div key={app.id} className="flex items-center space-x-2 text-sm text-gray-600">
                             <span className="font-medium">#{app.id.slice(-8)}</span>
                             <span>•</span>
