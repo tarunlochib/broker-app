@@ -11,112 +11,86 @@ model User {
   id           String        @id @default(cuid())
   email        String        @unique
   name         String?
-  passwordHash String?
-  role         String        @default("borrower") // borrower, broker, admin
+  role         String        @default("borrower")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  passwordHash String?
+  accounts     Account[]
   applications Application[]
   comments     Comment[]
-
-  // NextAuth relations (if used)
-  accounts Account[]
-  sessions Session[]
+  sessions     Session[]
 }
 
 model Application {
-  id              String     @id @default(cuid())
-  userId          String
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status          String     @default("draft")
-  // Borrower personal
-  firstName       String?
-  lastName        String?
-  dob             DateTime?
-  phone           String?
-  currentAddress  String?
-  maritalStatus   String?
-  dependents      Int?
-
-  // Employment & income
-  employmentStatus String?
-  employerName     String?
-  occupation       String?
+  id                  String     @id @default(cuid())
+  userId              String
+  status              String     @default("draft")
+  propertyAddress     String?
+  loanAmount          Float?
+  liabilities         Json?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  abn                 String?
+  annualIncome        Float?
+  assets              Json?
+  currentAddress      String?
+  dependents          Int?
+  deposit             Float?
+  dob                 DateTime?
+  employerName        String?
   employmentStartDate DateTime?
-  incomeType       String? // PAYG, Self-employed, etc.
-  annualIncome     Float?
-  abn              String?
-
-  // Property & loan
-  propertyAddress  String?
-  purchasePrice    Float?
-  loanPurpose      String? // purchase, refinance
-  propertyType     String? // house, unit, townhouse, land
-  occupancy        String? // owner, investment
-  loanAmount       Float?
-  deposit          Float?
-  lvr              Float?
-  features         Json?
-
-  // Financials
-  assets           Json?
-  liabilities      Json?
-  expenses         Json?
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  documents       Document[]
-  notes           Note[]     @relation("ApplicationNotes")
-  comments        Comment[]
+  employmentStatus    String?
+  expenses            Json?
+  features            Json?
+  firstName           String?
+  incomeType          String?
+  lastName            String?
+  loanPurpose         String?
+  lvr                 Float?
+  maritalStatus       String?
+  occupancy           String?
+  occupation          String?
+  phone               String?
+  propertyType        String?
+  purchasePrice       Float?
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments            Comment[]
+  documents           Document[]
+  notes               Note[]     @relation("ApplicationNotes")
 }
 
 model Document {
   id            String      @id @default(cuid())
   applicationId String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   s3Key         String
   fileName      String
   fileType      String
   size          Int
   uploadedBy    String
-  category      String      @default("other") // identity, income, bank, property, loan, other
-  status        String      @default("pending_scan") // pending_scan, safe, rejected
+  status        String      @default("pending_scan")
   createdAt     DateTime    @default(now())
+  category      String      @default("other")
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model Note {
   id            String      @id @default(cuid())
   applicationId String
-  application   Application @relation("ApplicationNotes", fields: [applicationId], references: [id], onDelete: Cascade)
   authorId      String
   content       String
   createdAt     DateTime    @default(now())
+  application   Application @relation("ApplicationNotes", fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model Comment {
   id            String      @id @default(cuid())
   applicationId String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   content       String
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-}
-
-model BrokerRequest {
-  id            String   @id @default(cuid())
-  userId        String
-  email         String
-  name          String
-  company       String?
-  licenseNumber String?
-  phone         String?
-  status        String   @default("pending") // pending, approved, rejected
-  reviewedBy    String?
-  reviewedAt    DateTime?
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
@@ -127,22 +101,20 @@ model AuditLog {
   createdAt DateTime @default(now())
 }
 
-// NextAuth models (recommended if you plan to use NextAuth)
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -152,8 +124,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {

@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requireRole, requireAuth } from "@/lib/auth";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const contentType = req.headers.get('content-type');
+  
+  // If it's JSON content, it's likely updating application details (borrower)
+  if (contentType?.includes('application/json')) {
+    return await updateApplicationDetails(req, params);
+  }
+  
+  // If it's form data, it's likely updating status (broker/admin)
   return await updateApplicationStatus(req, params);
 }
 
@@ -14,6 +22,56 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return await updateApplicationStatus(req, params);
+}
+
+async function updateApplicationDetails(
+  req: Request,
+  params: Promise<{ id: string }>
+) {
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
+  
+  try {
+    const session = await requireAuth();
+    const userId = (session.user as { id: string }).id;
+    
+    // Check if the application belongs to the user
+    const application = await prisma.application.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
+    
+    if (!application) {
+      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    }
+    
+    if (application.userId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    
+    const body = await req.json();
+    
+    const updatedApplication = await prisma.application.update({
+      where: { id },
+      data: {
+        ...body,
+        updatedAt: new Date()
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
+      }
+    });
+    
+    return NextResponse.json(updatedApplication, { status: 200 });
+  } catch (error) {
+    console.error("Error updating application details:", error);
+    return NextResponse.json({ error: "Failed to update application details" }, { status: 500 });
+  }
 }
 
 async function updateApplicationStatus(
@@ -26,7 +84,9 @@ async function updateApplicationStatus(
   const { id } = resolvedParams;
   
   try {
-    await requireRole(["broker", "admin"]);
+    console.log("Attempting to update application status for ID:", id);
+    const session = await requireRole(["broker", "admin"]);
+    console.log("User session:", { userId: session.user.id, role: session.user.role });
     
     // Handle both JSON and form data
     let status, notes;

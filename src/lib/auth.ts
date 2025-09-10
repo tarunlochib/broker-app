@@ -11,10 +11,18 @@ export async function requireAuth() {
 }
 
 export async function requireRole(roles: string[]) {
-  const session = await requireAuth();
-  const role = (session.user as { role?: string }).role ?? "borrower";
-  if (!roles.includes(role)) throw new Error("Forbidden");
-  return session;
+  try {
+    const session = await requireAuth();
+    const role = (session.user as { role?: string }).role ?? "borrower";
+    if (!roles.includes(role)) {
+      console.error(`Access denied: User role '${role}' not in required roles:`, roles);
+      throw new Error("Forbidden");
+    }
+    return session;
+  } catch (error) {
+    console.error("requireRole error:", error);
+    throw error;
+  }
 }
 
 
