@@ -12,6 +12,7 @@ export default async function PendingDocumentsPage() {
       application: {
         select: {
           id: true,
+          propertyAddress: true,
           firstName: true,
           lastName: true,
           user: {

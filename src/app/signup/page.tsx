@@ -7,7 +7,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (data: { email: string; password: string; confirmPassword: string; name?: string }) => {
+  const handleSubmit = async (data: { email: string; password: string; confirmPassword?: string; name?: string }) => {
     setError(null);
     
     if (data.password !== data.confirmPassword) {
