@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // Check if there's already a pending broker request for this email
-    const existingRequest = await prisma.brokerRequest.findUnique({ where: { email } });
+    const existingRequest = await prisma.brokerRequest.findFirst({ where: { email } });
     if (existingRequest) {
       return NextResponse.json({ error: "Broker request already pending for this email" }, { status: 409 });
     }
