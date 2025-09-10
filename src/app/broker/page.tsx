@@ -145,17 +145,17 @@ export default async function BrokerPage() {
   // Calculate enhanced metrics
   const totalApplications = applications.length;
   const totalClients = clients.length;
-  const totalLoanVolume = stats.reduce((sum: number, stat: any) => sum + (stat._sum.loanAmount || 0), 0);
-  const averageLoanAmount = stats.reduce((sum: number, stat: any) => sum + (stat._avg.loanAmount || 0), 0) / stats.length || 0;
+  const totalLoanVolume = stats.reduce((sum: number, stat: { _sum: { loanAmount: number | null } }) => sum + (stat._sum.loanAmount || 0), 0);
+  const averageLoanAmount = stats.reduce((sum: number, stat: { _avg: { loanAmount: number | null } }) => sum + (stat._avg.loanAmount || 0), 0) / stats.length || 0;
   const pendingDocumentsCount = pendingDocuments.length;
   
-  const statusCounts = stats.reduce((acc: Record<string, number>, stat: any) => {
+  const statusCounts = stats.reduce((acc: Record<string, number>, stat: { status: string; _count: number }) => {
     acc[stat.status] = stat._count;
     return acc;
   }, {} as Record<string, number>);
 
   // Calculate monthly trends
-  const monthlyTrends = monthlyStats.reduce((acc: Record<string, { count: number; volume: number }>, app: any) => {
+  const monthlyTrends = monthlyStats.reduce((acc: Record<string, { count: number; volume: number }>, app: { createdAt: Date; loanAmount: number | null }) => {
     const month = app.createdAt.toISOString().slice(0, 7); // YYYY-MM
     if (!acc[month]) {
       acc[month] = { count: 0, volume: 0 };
@@ -166,11 +166,11 @@ export default async function BrokerPage() {
   }, {} as Record<string, { count: number; volume: number }>);
 
   // Calculate top clients
-  const topClientsData = topClients.map((client: any) => ({
+  const topClientsData = topClients.map((client: { applications: { loanAmount: number | null }[] }) => ({
     ...client,
-    totalLoanVolume: client.applications.reduce((sum: number, app: any) => sum + (app.loanAmount || 0), 0),
+    totalLoanVolume: client.applications.reduce((sum: number, app: { loanAmount: number | null }) => sum + (app.loanAmount || 0), 0),
     applicationCount: client.applications.length,
-  })).sort((a: any, b: any) => b.totalLoanVolume - a.totalLoanVolume);
+  })).sort((a: { totalLoanVolume: number }, b: { totalLoanVolume: number }) => b.totalLoanVolume - a.totalLoanVolume);
 
   return (
     <div className="min-h-screen bg-gray-50">

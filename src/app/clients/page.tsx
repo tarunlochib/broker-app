@@ -34,10 +34,10 @@ export default async function ClientsPage() {
   // Calculate additional metrics for each client
   const clientsWithMetrics = clients.map(client => ({
     ...client,
-    totalLoanVolume: client.applications.reduce((sum: number, app: any) => sum + (app.loanAmount || 0), 0),
+    totalLoanVolume: client.applications.reduce((sum: number, app: { loanAmount: number | null }) => sum + (app.loanAmount || 0), 0),
     applicationCount: client.applications.length,
     lastApplicationDate: client.applications[0]?.createdAt || null,
-    statusCounts: client.applications.reduce((acc: Record<string, number>, app: any) => {
+    statusCounts: client.applications.reduce((acc: Record<string, number>, app: { status: string }) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>)
