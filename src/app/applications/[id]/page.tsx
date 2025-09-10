@@ -153,40 +153,85 @@ export default async function ApplicationDetail({ params }: { params: Promise<{ 
 
 function renderAssets(a: any) {
   if (!a) return <div className="col-span-2 text-sm text-gray-500">No asset information provided</div>;
+  
+  // Parse JSON if it's a string
+  let assetsData = a;
+  if (typeof a === 'string') {
+    try {
+      assetsData = JSON.parse(a);
+    } catch {
+      return <div className="col-span-2 text-sm text-gray-500">Invalid asset data</div>;
+    }
+  }
+  
+  if (!assetsData || Object.keys(assetsData).length === 0) {
+    return <div className="col-span-2 text-sm text-gray-500">No asset information provided</div>;
+  }
+  
   return (
     <>
-      <DetailItem label="Savings" value={a.savingsAmount} type="money" />
-      <DetailItem label="Other Property" value={a.otherPropertyValue} type="money" />
-      <DetailItem label="Shares" value={a.sharesValue} type="money" />
-      <DetailItem label="Superannuation" value={a.superannuationValue} type="money" />
-      <DetailItem label="Other Assets" value={a.otherAssetsValue} type="money" />
+      <DetailItem label="Savings" value={assetsData.savings} type="money" />
+      <DetailItem label="Other Property" value={assetsData.otherProperty} type="money" />
+      <DetailItem label="Shares" value={assetsData.shares} type="money" />
+      <DetailItem label="Superannuation" value={assetsData.super} type="money" />
+      <DetailItem label="Other Assets" value={assetsData.other} type="money" />
     </>
   );
 }
 
 function renderLiabilities(l: any) {
   if (!l) return <div className="col-span-2 text-sm text-gray-500">No liability information provided</div>;
+  
+  // Parse JSON if it's a string
+  let liabilitiesData = l;
+  if (typeof l === 'string') {
+    try {
+      liabilitiesData = JSON.parse(l);
+    } catch {
+      return <div className="col-span-2 text-sm text-gray-500">Invalid liability data</div>;
+    }
+  }
+  
+  if (!liabilitiesData || Object.keys(liabilitiesData).length === 0) {
+    return <div className="col-span-2 text-sm text-gray-500">No liability information provided</div>;
+  }
+  
   return (
     <>
-      <DetailItem label="Credit Cards Limit" value={l.creditCardsLimit} type="money" />
-      <DetailItem label="Credit Cards Balance" value={l.creditCardsBalance} type="money" />
-      <DetailItem label="Personal Loans" value={l.personalLoansBalance} type="money" />
-      <DetailItem label="Auto Loans" value={l.autoLoansBalance} type="money" />
-      <DetailItem label="HECS/HELP" value={l.hecsBalance} type="money" />
-      <DetailItem label="Other Liabilities" value={l.otherLiabilitiesBalance} type="money" />
+      <DetailItem label="Credit Cards Limit" value={liabilitiesData.cardsLimit} type="money" />
+      <DetailItem label="Credit Cards Balance" value={liabilitiesData.cardsBalance} type="money" />
+      <DetailItem label="Personal Loans" value={liabilitiesData.personal} type="money" />
+      <DetailItem label="Auto Loans" value={liabilitiesData.auto} type="money" />
+      <DetailItem label="HECS/HELP" value={liabilitiesData.hecs} type="money" />
+      <DetailItem label="Other Liabilities" value={liabilitiesData.other} type="money" />
     </>
   );
 }
 
 function renderExpenses(e: any) {
   if (!e) return <div className="col-span-2 text-sm text-gray-500">No expense information provided</div>;
+  
+  // Parse JSON if it's a string
+  let expensesData = e;
+  if (typeof e === 'string') {
+    try {
+      expensesData = JSON.parse(e);
+    } catch {
+      return <div className="col-span-2 text-sm text-gray-500">Invalid expense data</div>;
+    }
+  }
+  
+  if (!expensesData || Object.keys(expensesData).length === 0) {
+    return <div className="col-span-2 text-sm text-gray-500">No expense information provided</div>;
+  }
+  
   return (
     <>
-      <DetailItem label="Monthly Living" value={e.monthlyLiving} type="money" />
-      <DetailItem label="Rent" value={e.rent} type="money" />
-      <DetailItem label="Childcare" value={e.childcare} type="money" />
-      <DetailItem label="Insurance" value={e.insurance} type="money" />
-      <DetailItem label="Other Expenses" value={e.otherExpenses} type="money" />
+      <DetailItem label="Monthly Living" value={expensesData.living} type="money" />
+      <DetailItem label="Rent" value={expensesData.rent} type="money" />
+      <DetailItem label="Childcare" value={expensesData.childcare} type="money" />
+      <DetailItem label="Insurance" value={expensesData.insurance} type="money" />
+      <DetailItem label="Other Expenses" value={expensesData.other} type="money" />
     </>
   );
 }
