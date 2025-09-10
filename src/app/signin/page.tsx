@@ -10,7 +10,7 @@ export default function SignInPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'credentials' | 'magiclink'>('credentials');
 
-  const handleCredentialsSubmit = async (data: any) => {
+  const handleCredentialsSubmit = async (data: { email: string; password: string }) => {
     setIsLoading(true);
     setError(null);
     
@@ -35,13 +35,13 @@ export default function SignInPage() {
             } else {
               window.location.href = "/dashboard";
             }
-          } catch (error) {
+          } catch {
             // Fallback to dashboard if session check fails
             window.location.href = "/dashboard";
           }
         }, 100);
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -66,7 +66,7 @@ export default function SignInPage() {
       } else {
         setError("Failed to send magic link. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

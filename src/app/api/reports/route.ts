@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   }
 }
 
-async function getOverviewReport(dateFilter: any) {
+async function getOverviewReport(dateFilter: { createdAt?: { gte?: Date; lte?: Date } }) {
   const combinedFilter = {
     ...dateFilter,
     status: {
@@ -86,7 +86,7 @@ async function getOverviewReport(dateFilter: any) {
   });
 }
 
-async function getApplicationsReport(dateFilter: any) {
+async function getApplicationsReport(dateFilter: { createdAt?: { gte?: Date; lte?: Date } }) {
   const combinedFilter = {
     ...dateFilter,
     status: {
@@ -117,7 +117,7 @@ async function getApplicationsReport(dateFilter: any) {
   return NextResponse.json({ applications });
 }
 
-async function getClientsReport(dateFilter: any) {
+async function getClientsReport(dateFilter: { createdAt?: { gte?: Date; lte?: Date } }) {
   const clients = await prisma.user.findMany({
     where: { role: "borrower", ...dateFilter },
     include: {
@@ -138,17 +138,17 @@ async function getClientsReport(dateFilter: any) {
     orderBy: { createdAt: "desc" }
   });
 
-  const clientsWithMetrics = clients.map((client: any) => ({
+  const clientsWithMetrics = clients.map((client: { applications: { loanAmount: number | null; status: string }[] }) => ({
     ...client,
-    totalLoanVolume: client.applications.reduce((sum: number, app: any) => sum + (app.loanAmount || 0), 0),
+    totalLoanVolume: client.applications.reduce((sum: number, app: { loanAmount: number | null }) => sum + (app.loanAmount || 0), 0),
     applicationCount: client.applications.length,
-    approvedApplications: client.applications.filter((app: any) => app.status === 'approved').length
+    approvedApplications: client.applications.filter((app: { status: string }) => app.status === 'approved').length
   }));
 
   return NextResponse.json({ clients: clientsWithMetrics });
 }
 
-async function getPerformanceReport(dateFilter: any) {
+async function getPerformanceReport(dateFilter: { createdAt?: { gte?: Date; lte?: Date } }) {
   const combinedFilter = {
     ...dateFilter,
     status: {
@@ -168,8 +168,8 @@ async function getPerformanceReport(dateFilter: any) {
   const performance = {
     conversionRate: 0,
     averageProcessingTime: 0,
-    totalVolume: applications.reduce((sum: number, app: any) => sum + (app.loanAmount || 0), 0),
-    statusDistribution: applications.reduce((acc: Record<string, number>, app: any) => {
+    totalVolume: applications.reduce((sum: number, app: { loanAmount: number | null }) => sum + (app.loanAmount || 0), 0),
+    statusDistribution: applications.reduce((acc: Record<string, number>, app: { status: string }) => {
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>)
@@ -181,7 +181,7 @@ async function getPerformanceReport(dateFilter: any) {
   return NextResponse.json({ performance });
 }
 
-function calculateMonthlyTrends(applications: any[]) {
+function calculateMonthlyTrends(applications: { createdAt: Date; loanAmount: number | null }[]) {
   const trends = applications.reduce((acc, app) => {
     const month = app.createdAt.toISOString().slice(0, 7); // YYYY-MM
     if (!acc[month]) {
@@ -194,5 +194,5 @@ function calculateMonthlyTrends(applications: any[]) {
 
   return Object.entries(trends)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, data]) => ({ month, ...(data as any) }));
+    .map(([month, data]) => ({ month, ...data }));
 }

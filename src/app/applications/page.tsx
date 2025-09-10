@@ -4,8 +4,8 @@ import { ApplicationsPage } from "@/components/applications/ApplicationsPage";
 
 export default async function ApplicationsPageServer() {
   const session = await requireAuth();
-  const userId = (session.user as any).id as string;
-  const role = (session.user as any).role as string;
+  const userId = (session.user as { id: string }).id;
+  const role = (session.user as { role?: string }).role ?? "borrower";
   
   const apps = await prisma.application.findMany({
     where: {

@@ -31,7 +31,7 @@ export async function GET() {
   return NextResponse.json(apps);
 }
 
-export async function POST(_: Request) {
+export async function POST(req: Request) {
   await requireRole(["borrower", "broker", "admin"]);
   const session = await requireAuth();
   const userId = (session.user as { id: string }).id;

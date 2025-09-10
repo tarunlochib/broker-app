@@ -7,7 +7,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { email: string; password: string; confirmPassword: string; name?: string }) => {
     setError(null);
     
     if (data.password !== data.confirmPassword) {
@@ -46,8 +46,8 @@ export default function SignupPage() {
         // Redirect based on user role (new users are always borrowers)
         window.location.href = "/dashboard";
       }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }

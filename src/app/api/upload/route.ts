@@ -33,9 +33,9 @@ export async function POST(req: Request) {
       applicationId: applicationId || "temp", // Use temp for new applications
       s3Key: key,
       fileName: file.name,
-      fileType: (file as any).type || "application/octet-stream",
+      fileType: file.type || "application/octet-stream",
       size: buffer.length,
-      uploadedBy: (session.user as any).id,
+      uploadedBy: (session.user as { id: string }).id,
       status: "pending_scan",
     },
   });

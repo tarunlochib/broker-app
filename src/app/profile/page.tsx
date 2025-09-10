@@ -6,7 +6,7 @@ import { PasswordChangeForm } from "@/components/profile/PasswordChangeForm";
 
 export default async function ProfilePage() {
   const session = await requireAuth();
-  const userId = (session.user as any).id as string;
+  const userId = (session.user as { id: string }).id;
   const user = await prisma.user.findUnique({ 
     where: { id: userId }, 
     select: { 

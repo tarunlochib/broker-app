@@ -10,8 +10,8 @@ export async function GET(
   try {
     const session = await requireAuth();
     const { id } = await params;
-    const role = (session.user as any).role as string;
-    const userId = (session.user as any).id as string;
+    const role = (session.user as { role?: string }).role ?? "borrower";
+    const userId = (session.user as { id: string }).id;
 
     // Check if user has access to this application
     const app = await prisma.application.findUnique({
@@ -56,8 +56,8 @@ export async function POST(
   try {
     const session = await requireAuth();
     const { id } = await params;
-    const role = (session.user as any).role as string;
-    const userId = (session.user as any).id as string;
+    const role = (session.user as { role?: string }).role ?? "borrower";
+    const userId = (session.user as { id: string }).id;
 
     const { content } = await request.json();
 
