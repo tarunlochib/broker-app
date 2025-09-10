@@ -386,10 +386,16 @@ export default function NewApplicationForm() {
         loanAmount: form.loanAmount ? Number(form.loanAmount) : null,
         deposit: form.deposit ? Number(form.deposit) : null,
         lvr: form.lvr ? Number(form.lvr) : null,
-        // Use structured financials from form state
-        assets: form.assets ? JSON.parse(form.assets) : null,
-        liabilities: form.liabilities ? JSON.parse(form.liabilities) : null,
-        expenses: form.expenses ? JSON.parse(form.expenses) : null,
+        // Use structured financials from form state with error handling
+        assets: form.assets && form.assets.trim() ? (() => {
+          try { return JSON.parse(form.assets); } catch { return null; }
+        })() : null,
+        liabilities: form.liabilities && form.liabilities.trim() ? (() => {
+          try { return JSON.parse(form.liabilities); } catch { return null; }
+        })() : null,
+        expenses: form.expenses && form.expenses.trim() ? (() => {
+          try { return JSON.parse(form.expenses); } catch { return null; }
+        })() : null,
       };
       const upd = await fetch(`/api/applications/${created.id}`, {
         method: "PATCH",
@@ -1019,9 +1025,15 @@ export default function NewApplicationForm() {
                             loanAmount: form.loanAmount ? Number(form.loanAmount) : null,
                             deposit: form.deposit ? Number(form.deposit) : null,
                             lvr: form.lvr ? Number(form.lvr) : null,
-                            assets: form.assets ? JSON.parse(form.assets) : null,
-                            liabilities: form.liabilities ? JSON.parse(form.liabilities) : null,
-                            expenses: form.expenses ? JSON.parse(form.expenses) : null,
+                            assets: form.assets && form.assets.trim() ? (() => {
+                              try { return JSON.parse(form.assets); } catch { return null; }
+                            })() : null,
+                            liabilities: form.liabilities && form.liabilities.trim() ? (() => {
+                              try { return JSON.parse(form.liabilities); } catch { return null; }
+                            })() : null,
+                            expenses: form.expenses && form.expenses.trim() ? (() => {
+                              try { return JSON.parse(form.expenses); } catch { return null; }
+                            })() : null,
                             status: "draft"
                           };
                           

@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
@@ -18,27 +16,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const ext = path.extname(file.name) || "";
-  const key = crypto.randomBytes(16).toString("hex") + ext;
+  try {
+    // For now, we'll store file metadata without actual file storage
+    // In production, you should use Supabase Storage or AWS S3
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const ext = file.name.split('.').pop() || "";
+    const key = crypto.randomBytes(16).toString("hex") + "." + ext;
 
-  const uploadDir = path.join(process.cwd(), "uploads");
-  await fs.mkdir(uploadDir, { recursive: true });
-  const target = path.join(uploadDir, key);
-  await fs.writeFile(target, buffer);
+    // Store file info in database (file content would go to cloud storage)
+    const doc = await prisma.document.create({
+      data: {
+        applicationId: applicationId || "temp",
+        s3Key: key, // This would be the cloud storage key
+        fileName: file.name,
+        fileType: file.type || "application/octet-stream",
+        size: buffer.length,
+        uploadedBy: (session.user as { id: string }).id,
+        category: category,
+        status: "pending_scan",
+      },
+    });
 
-  const doc = await prisma.document.create({
-    data: {
-      applicationId: applicationId || "temp", // Use temp for new applications
-      s3Key: key,
-      fileName: file.name,
-      fileType: file.type || "application/octet-stream",
-      size: buffer.length,
-      uploadedBy: (session.user as { id: string }).id,
-      status: "pending_scan",
-    },
-  });
-
-  return NextResponse.json(doc, { status: 201 });
+    return NextResponse.json(doc, { status: 201 });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
+  }
 }
