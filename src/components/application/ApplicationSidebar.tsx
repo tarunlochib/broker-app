@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -89,14 +90,34 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
             )}
 
             {application.status === "draft" && (
-              <form action={`/api/applications/${application.id}`} method="DELETE" className="w-full">
-                <Button variant="outline" size="sm" className="w-full text-red-600 border-red-200 hover:bg-red-50">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Delete Draft
-                </Button>
-              </form>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this draft application? This action cannot be undone.")) {
+                    try {
+                      const response = await fetch(`/api/applications/${application.id}`, {
+                        method: 'DELETE',
+                      });
+                      
+                      if (response.ok) {
+                        window.location.href = '/applications';
+                      } else {
+                        const error = await response.text();
+                        alert(`Failed to delete application: ${error}`);
+                      }
+                    } catch (error) {
+                      alert('Failed to delete application. Please try again.');
+                    }
+                  }
+                }}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Draft
+              </Button>
             )}
 
             <Button variant="ghost" size="sm" asChild className="w-full justify-start">
