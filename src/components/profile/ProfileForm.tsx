@@ -49,6 +49,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
       }
     } catch (error) {
+      console.error('Profile update error:', error);
       setMessage({ type: 'error', text: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);

@@ -35,9 +35,9 @@ export function Button({ className, variant, size, asChild, children, ...props }
   
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
-      className: clsx(buttonClasses, (children.props as any).className),
+      className: clsx(buttonClasses, (children.props as { className?: string }).className),
       ...props,
-    } as any);
+    } as React.HTMLAttributes<HTMLElement>);
   }
   
   return (

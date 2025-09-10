@@ -80,6 +80,7 @@ export function PasswordChangeForm() {
         setMessage({ type: 'error', text: data.error || 'Failed to update password. Please try again.' });
       }
     } catch (error) {
+      console.error('Password change error:', error);
       setMessage({ type: 'error', text: 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
