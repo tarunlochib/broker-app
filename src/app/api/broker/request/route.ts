@@ -31,12 +31,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email already in use" }, { status: 409 });
     }
 
-    // Check if there's already a pending broker request for this email
-    const existingRequest = await prisma.brokerRequest.findFirst({ where: { email } });
-    if (existingRequest) {
-      return NextResponse.json({ error: "Broker request already pending for this email" }, { status: 409 });
-    }
-
     const passwordHash = await bcrypt.hash(password, 12);
     
     // Create user with "pending_broker" role
@@ -56,31 +50,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create broker request
-    const brokerRequest = await prisma.brokerRequest.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        company,
-        licenseNumber,
-        phone,
-        status: "pending",
-      }
-    });
-
-    // Log the broker request
-    await prisma.auditLog.create({
-      data: {
-        action: "broker_request_submitted",
-        meta: {
-          userId: user.id,
-          email: user.email,
-          requestId: brokerRequest.id,
-        }
-      }
-    });
-
     return NextResponse.json({
       message: "Broker request submitted successfully. Your account will be reviewed by an administrator.",
       user: {
@@ -88,8 +57,7 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
         role: user.role,
-      },
-      requestId: brokerRequest.id
+      }
     }, { status: 201 });
 
   } catch (error) {
