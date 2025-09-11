@@ -21,11 +21,11 @@ export function StepNavigation({
   className = "" 
 }: StepNavigationProps) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 ${className}`}>
+    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 ${className}`}>
       {/* Compact Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Application Progress</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Application Progress</h2>
           <p className="text-xs text-gray-500">Step {currentStep} of {totalSteps}</p>
         </div>
         <div className="text-right">
@@ -37,7 +37,7 @@ export function StepNavigation({
       </div>
 
       {/* Compact Progress Bar */}
-      <div className="mb-5">
+      <div className="mb-4 sm:mb-5">
         <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div 
             className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500 ease-out"
@@ -58,7 +58,7 @@ export function StepNavigation({
             <div
               key={stepNumber}
               className={`
-                flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer
+                flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 cursor-pointer
                 ${isCurrent 
                   ? "bg-blue-50 border border-blue-200" 
                   : isCompleted 
@@ -71,7 +71,7 @@ export function StepNavigation({
             >
               {/* Compact Step Number */}
               <div className={`
-                w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs transition-all duration-200 flex-shrink-0
+                w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-semibold text-xs transition-all duration-200 flex-shrink-0
                 ${isCurrent 
                   ? "bg-blue-500 text-white shadow-sm" 
                   : isCompleted 
@@ -80,7 +80,7 @@ export function StepNavigation({
                 }
               `}>
                 {isCompleted ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
@@ -90,7 +90,7 @@ export function StepNavigation({
 
               {/* Compact Step Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   {step.icon && (
                     <div className={`
                       p-1 rounded-md transition-colors duration-200 flex-shrink-0
@@ -101,14 +101,14 @@ export function StepNavigation({
                   )}
                   <div className="min-w-0">
                     <h3 className={`
-                      text-sm font-medium transition-colors duration-200 truncate
+                      text-xs sm:text-sm font-medium transition-colors duration-200 truncate
                       ${isCurrent ? "text-blue-900" : isCompleted ? "text-green-900" : "text-gray-700"}
                     `}>
                       {step.title}
                     </h3>
                     {step.description && (
                       <p className={`
-                        text-xs mt-0.5 transition-colors duration-200 truncate
+                        text-xs mt-0.5 transition-colors duration-200 truncate hidden sm:block
                         ${isCurrent ? "text-blue-700" : isCompleted ? "text-green-700" : "text-gray-500"}
                       `}>
                         {step.description}
@@ -122,7 +122,7 @@ export function StepNavigation({
               {isCurrent && (
                 <div className="flex items-center gap-1 text-blue-600 flex-shrink-0">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium">Now</span>
+                  <span className="text-xs font-medium hidden sm:inline">Now</span>
                 </div>
               )}
             </div>

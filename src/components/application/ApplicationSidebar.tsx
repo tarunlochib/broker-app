@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 interface ApplicationSidebarProps {
@@ -11,36 +10,36 @@ interface ApplicationSidebarProps {
 export function ApplicationSidebar({ application, role }: ApplicationSidebarProps) {
   return (
     <aside className="space-y-6 sticky top-8">
-      {/* Overview Card */}
-      <Card className="p-6 bg-gradient-to-br from-white to-blue-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+      {/* Enhanced Overview Card */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 p-6">
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Quick Overview</h3>
+            <h3 className="text-xl font-bold text-gray-900">Quick Overview</h3>
           </div>
           
           <div className="space-y-4">
-            <OverviewItem 
+            <EnhancedOverviewItem 
               label="Property Address" 
               value={application.propertyAddress || "Not specified"} 
               icon="📍"
             />
-            <OverviewItem 
+            <EnhancedOverviewItem 
               label="Loan Amount" 
               value={formatMoney(application.loanAmount)} 
               icon="💰"
               highlight={true}
             />
-            <OverviewItem 
+            <EnhancedOverviewItem 
               label="Purchase Price" 
               value={formatMoney(application.purchasePrice)} 
               icon="🏠"
             />
-            <OverviewItem 
+            <EnhancedOverviewItem 
               label="LVR" 
               value={application.lvr ? `${application.lvr}%` : "Not calculated"} 
               icon="📊"
@@ -48,22 +47,22 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
             />
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Quick Actions */}
-      <Card className="p-6 bg-gradient-to-br from-white to-green-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+      {/* Enhanced Quick Actions */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 p-6">
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 text-green-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
+            <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
           </div>
           
           <div className="space-y-4">
-            <Button variant="outline" size="sm" asChild className="w-full justify-start">
+            <Button variant="outline" size="sm" asChild className="w-full justify-start hover:bg-blue-50 hover:border-blue-300 transition-all duration-200">
               <Link href={`/applications/${application.id}/edit`}>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -76,16 +75,39 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
               <StatusActions application={application} />
             ) : (
               application.status === "draft" && (
-                <form action={`/api/applications/${application.id}`} method="POST" className="w-full">
-                  <input type="hidden" name="_method" value="PATCH" />
-                  <input type="hidden" name="status" value="submitted" />
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    Submit Application
-                  </Button>
-                </form>
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 transition-all duration-200"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to submit this application? Once submitted, you won't be able to edit it.")) {
+                      try {
+                        const response = await fetch(`/api/applications/${application.id}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            status: 'submitted'
+                          }),
+                        });
+                        
+                        if (response.ok) {
+                          // Reload the page to show updated status
+                          window.location.reload();
+                        } else {
+                          const errorData = await response.json().catch(() => ({}));
+                          alert(`Failed to submit application: ${errorData.error || 'Unknown error'}`);
+                        }
+                      } catch (error) {
+                        alert('Failed to submit application. Please try again.');
+                      }
+                    }
+                  }}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Submit Application
+                </Button>
               )
             )}
 
@@ -93,7 +115,7 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
                 onClick={async () => {
                   if (confirm("Are you sure you want to delete this draft application? This action cannot be undone.")) {
                     try {
@@ -120,7 +142,7 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
               </Button>
             )}
 
-            <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+            <Button variant="ghost" size="sm" asChild className="w-full justify-start hover:bg-gray-50 transition-all duration-200">
               <Link href="/applications">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -130,26 +152,24 @@ export function ApplicationSidebar({ application, role }: ApplicationSidebarProp
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
     </aside>
   );
 }
 
-function OverviewItem({ label, value, icon, highlight = false }: { label: string; value: string; icon: string; highlight?: boolean }) {
+function EnhancedOverviewItem({ label, value, icon, highlight = false }: { label: string; value: string; icon: string; highlight?: boolean }) {
   return (
-    <div className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-200 hover:scale-105 ${
-      highlight 
-        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm' 
-        : 'bg-gradient-to-r from-gray-50 to-white hover:from-blue-50/50 hover:to-indigo-50/50'
+    <div className={`group/item p-4 rounded-xl bg-gradient-to-r from-gray-50/50 to-white hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200 border border-transparent hover:border-blue-200/50 hover:shadow-sm ${
+      highlight ? 'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-blue-200/50' : ''
     }`}>
-      <div className={`p-2 rounded-lg ${highlight ? 'bg-blue-100' : 'bg-gray-100'}`}>
-        <span className="text-lg">{icon}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className={`text-xs font-semibold uppercase tracking-wide ${highlight ? 'text-blue-600' : 'text-gray-500'}`}>
-          {label}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm">{icon}</span>
+          <div className={`text-xs font-semibold uppercase tracking-wide ${highlight ? 'text-blue-600' : 'text-gray-600'}`}>
+            {label}
+          </div>
         </div>
-        <div className={`text-sm font-bold truncate ${highlight ? 'text-blue-900' : 'text-gray-900'}`}>
+        <div className={`text-base font-semibold ${highlight ? 'text-blue-700' : 'text-gray-900'} transition-colors duration-200`}>
           {value}
         </div>
       </div>
@@ -159,28 +179,28 @@ function OverviewItem({ label, value, icon, highlight = false }: { label: string
 
 function StatusActions({ application }: { application: any }) {
   return (
-    <form action={`/api/applications/${application.id}`} method="POST" className="space-y-2">
-      <input type="hidden" name="_method" value="PATCH" />
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-gray-700">Update Status</label>
+    <div className="space-y-3">
+      <div className="text-xs font-medium text-gray-700">Update Status</div>
+      <form action={`/api/applications/${application.id}`} method="POST" className="space-y-3">
+        <input type="hidden" name="_method" value="PATCH" />
         <select 
           name="status" 
           defaultValue={application.status} 
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400 transition-colors duration-200"
         >
           <option value="draft">Draft</option>
           <option value="submitted">Submitted</option>
           <option value="under_review">Under Review</option>
           <option value="completed">Completed</option>
         </select>
-        <Button size="sm" className="w-full">
+        <Button size="sm" className="w-full hover:bg-blue-600 transition-all duration-200">
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           Save Status
         </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
 

@@ -530,10 +530,10 @@ export default function EditApplicationForm({ initial }: { initial: AppData }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
           {/* Step Navigation */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 order-1">
             <StepNavigation
               currentStep={step}
               totalSteps={steps.length}
@@ -543,7 +543,7 @@ export default function EditApplicationForm({ initial }: { initial: AppData }) {
           </div>
 
           {/* Form Content */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 order-2 space-y-4 sm:space-y-6">
             {/* Error Message */}
             {error && (
               <ErrorDisplay
@@ -1124,9 +1124,10 @@ export default function EditApplicationForm({ initial }: { initial: AppData }) {
                     
                     <div className="flex gap-3 ml-auto">
                       <Button 
+                        type="button"
                         onClick={save} 
                         disabled={saving}
-                        className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                        className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                       >
                         {saving ? (
                           <>
@@ -1138,7 +1139,110 @@ export default function EditApplicationForm({ initial }: { initial: AppData }) {
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            Save Application
+                            Save Draft
+                          </>
+                        )}
+                      </Button>
+                      
+                      {/* Submit button for draft applications */}
+                      <Button 
+                        type="button"
+                        onClick={async () => {
+                          setSaving(true);
+                          setError(null);
+                          setValidationErrors({});
+                          
+                          try {
+                            // Validate all required steps before submitting
+                            if (!isFormComplete()) {
+                              setError("Please complete all required fields before submitting the application.");
+                              setSaving(false);
+                              return;
+                            }
+
+                            // First save the current data
+                            const payload: any = {
+                              firstName: form.firstName?.trim() || null,
+                              lastName: form.lastName?.trim() || null,
+                              dob: form.dob ? new Date(form.dob) : null,
+                              phone: form.phone?.trim() || null,
+                              currentAddress: form.currentAddress?.trim() || null,
+                              maritalStatus: form.maritalStatus?.trim() || null,
+                              dependents: form.dependents ? Number(form.dependents) : null,
+                              employmentStatus: form.employmentStatus?.trim() || null,
+                              employerName: form.employerName?.trim() || null,
+                              occupation: form.occupation?.trim() || null,
+                              employmentStartDate: form.employmentStartDate ? new Date(form.employmentStartDate) : null,
+                              incomeType: form.incomeType?.trim() || null,
+                              annualIncome: form.annualIncome ? Number(form.annualIncome) : null,
+                              abn: form.abn?.trim() || null,
+                              propertyAddress: form.propertyAddress?.trim() || null,
+                              purchasePrice: form.purchasePrice ? Number(form.purchasePrice) : null,
+                              loanPurpose: form.loanPurpose?.trim() || null,
+                              propertyType: form.propertyType?.trim() || null,
+                              occupancy: form.occupancy?.trim() || null,
+                              loanAmount: form.loanAmount ? Number(form.loanAmount) : null,
+                              deposit: form.deposit ? Number(form.deposit) : null,
+                              lvr: form.lvr ? Number(form.lvr) : null,
+                              assets: form.assets && form.assets.trim() ? (() => {
+                                try { return JSON.parse(form.assets); } catch { return null; }
+                              })() : null,
+                              liabilities: form.liabilities && form.liabilities.trim() ? (() => {
+                                try { return JSON.parse(form.liabilities); } catch { return null; }
+                              })() : null,
+                              expenses: form.expenses && form.expenses.trim() ? (() => {
+                                try { return JSON.parse(form.expenses); } catch { return null; }
+                              })() : null,
+                              status: "submitted" // Set status to submitted
+                            };
+                            
+                            const response = await fetch(`/api/applications/${initial.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(payload),
+                            });
+                            
+                            if (!response.ok) {
+                              const errorData = await response.json().catch(() => ({}));
+                              throw new Error(errorData.error || "Failed to submit application. Please try again.");
+                            }
+                            
+                            router.replace(`/applications/${initial.id}`);
+                          } catch (e: any) {
+                            console.error("Application submission error:", e);
+                            
+                            // Handle different types of errors
+                            if (e.message?.includes("network") || e.message?.includes("fetch")) {
+                              setError("Network error. Please check your internet connection and try again.");
+                            } else if (e.message?.includes("validation") || e.message?.includes("required")) {
+                              setError("Please check all required fields and try again.");
+                            } else if (e.message?.includes("authentication") || e.message?.includes("unauthorized")) {
+                              setError("Your session has expired. Please sign in again.");
+                            } else {
+                              setError(e.message || "An unexpected error occurred. Please try again or contact support if the problem persists.");
+                            }
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving || !formComplete}
+                        className={`px-8 py-2 ${
+                          formComplete 
+                            ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" 
+                            : "bg-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        {saving ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Submit Application
                           </>
                         )}
                       </Button>

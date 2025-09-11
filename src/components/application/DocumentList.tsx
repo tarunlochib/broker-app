@@ -1,5 +1,3 @@
-import { Card } from "@/components/ui/Card";
-
 interface DocumentListProps {
   documents: any[];
 }
@@ -35,63 +33,56 @@ export function DocumentList({ documents }: DocumentListProps) {
   };
 
   return (
-    <Card className="group p-6 bg-gradient-to-br from-white to-purple-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+    <div className="space-y-6">
+      {documents.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
+            <span className="text-2xl">📁</span>
           </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors duration-300">Documents</h3>
-            <p className="text-sm text-gray-600">Uploaded files and documents</p>
-          </div>
-          <div className="bg-gradient-to-r from-purple-100 to-indigo-100 px-4 py-2 rounded-full">
-            <span className="text-sm font-bold text-purple-700">{documents.length} files</span>
-          </div>
+          <div className="text-lg font-semibold text-gray-700 mb-2">No documents uploaded yet</div>
+          <div className="text-sm text-gray-500">Upload documents to complete your application</div>
         </div>
-
-        {documents.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
-              <span className="text-2xl">📁</span>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
             </div>
-            <div className="text-lg font-semibold text-gray-700 mb-2">No documents uploaded yet</div>
-            <div className="text-sm text-gray-500">Upload documents to complete your application</div>
           </div>
-        ) : (
           <div className="space-y-4">
             {documents.map((doc) => (
               <div 
                 key={doc.id} 
-                className="group/doc flex items-center gap-4 p-5 rounded-xl bg-gradient-to-r from-white to-gray-50/50 border border-gray-200 hover:border-purple-300 hover:shadow-lg hover:scale-105 transition-all duration-300"
+                className="group/doc p-4 rounded-xl bg-gradient-to-r from-gray-50/50 to-white hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-200 border border-transparent hover:border-indigo-200/50 hover:shadow-sm"
               >
-                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 group-hover/doc:scale-110 transition-transform duration-300">
-                  <span className="text-xl">{getCategoryIcon(doc.category || "other")}</span>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-gray-900 truncate group-hover/doc:text-purple-700 transition-colors duration-200">
-                    {doc.fileName}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getCategoryIcon(doc.category || "other")}</span>
+                    <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      {doc.category || "other"}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    <span className="font-medium">{doc.category || "other"}</span> • 
-                    <span className="mx-1">{formatFileSize(doc.size)}</span> • 
-                    <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 truncate group-hover/doc:text-indigo-700 transition-colors duration-200">
+                      {doc.fileName}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {formatFileSize(doc.size)} • {new Date(doc.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className={`px-4 py-2 rounded-full text-xs font-bold border-2 ${getStatusColor(doc.status)} group-hover/doc:scale-105 transition-transform duration-200`}>
-                    {doc.status.replace("_", " ")}
-                  </span>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(doc.status)}`}>
+                      {doc.status.replace("_", " ")}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-    </Card>
+        </>
+      )}
+    </div>
   );
 }

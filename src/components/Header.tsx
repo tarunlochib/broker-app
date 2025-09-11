@@ -2,6 +2,7 @@
 import { useSession } from "next-auth/react";
 import { Logo } from "./navbar/Logo";
 import { NavigationMenu } from "./navbar/NavigationMenu";
+import { MobileNavigationMenu } from "./navbar/MobileNavigationMenu";
 import { UserMenu } from "./navbar/UserMenu";
 import { AuthButtons } from "./navbar/AuthButtons";
 
@@ -19,14 +20,24 @@ export default function Header() {
       
       {/* Main header */}
       <div className="w-full bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4">
-          {/* Logo */}
-          <Logo />
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4 relative">
+          {/* Left Side - Mobile Menu + Logo */}
+          <div className="flex items-center gap-4">
+            {/* Mobile Navigation Menu */}
+            <div className="md:hidden">
+              <MobileNavigationMenu role={role} />
+            </div>
+            
+            {/* Logo */}
+            <Logo />
+          </div>
           
-          {/* Navigation Menu */}
-          <NavigationMenu role={role} />
+          {/* Center - Desktop Navigation */}
+          <div className="hidden md:block">
+            <NavigationMenu role={role} />
+          </div>
           
-          {/* User Actions */}
+          {/* Right Side - User Actions */}
           <div className="flex items-center gap-4">
             {!isAuthed ? (
               <AuthButtons />

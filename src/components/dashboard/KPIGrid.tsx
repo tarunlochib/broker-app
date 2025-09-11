@@ -32,11 +32,11 @@ export function KPICard({ title, value, color = "slate", icon, trend }: KPICardP
         <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-700" />
       </div>
       
-      <div className="relative flex flex-col items-center justify-center space-y-4 min-h-[140px]">
+      <div className="relative flex flex-col items-center justify-center space-y-3 sm:space-y-4 min-h-[120px] sm:min-h-[140px] p-4 sm:p-6">
         {/* Header with icon */}
         <div className="flex items-center justify-center">
           {icon && (
-            <div className="p-3 rounded-xl bg-white/70 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ease-out">
+            <div className="p-2 sm:p-3 rounded-xl bg-white/70 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ease-out">
               {icon}
             </div>
           )}
@@ -44,14 +44,14 @@ export function KPICard({ title, value, color = "slate", icon, trend }: KPICardP
         
         {/* Centered value with counter animation */}
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-300 ease-out">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-300 ease-out">
             {value}
           </div>
         </div>
         
         {/* Title */}
         <div className="text-center">
-          <span className="text-sm font-medium text-gray-600 group-hover:text-gray-800 transition-colors duration-300">{title}</span>
+          <span className="text-xs sm:text-sm font-medium text-gray-600 group-hover:text-gray-800 transition-colors duration-300">{title}</span>
         </div>
         
         {/* Trend indicator */}
@@ -80,7 +80,7 @@ interface KPIGridProps {
 
 export function KPIGrid({ children }: KPIGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {children}
     </div>
   );

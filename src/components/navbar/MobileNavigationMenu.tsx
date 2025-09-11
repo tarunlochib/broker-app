@@ -1,45 +1,15 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
-interface NavItemProps {
-  href: string;
-  current: boolean;
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-}
-
-export function NavItem({ href, current, children, icon }: NavItemProps) {
-  return (
-    <Link
-      href={href}
-      className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
-        current 
-          ? "bg-blue-50 text-blue-700 shadow-sm" 
-          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-      }`}
-    >
-      {icon && (
-        <span className={`transition-colors duration-200 ${
-          current ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
-        }`}>
-          {icon}
-        </span>
-      )}
-      <span>{children}</span>
-      {current && (
-        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
-      )}
-    </Link>
-  );
-}
-
-interface NavigationMenuProps {
+interface MobileNavigationMenuProps {
   role?: string;
 }
 
-export function NavigationMenu({ role }: NavigationMenuProps) {
+export function MobileNavigationMenu({ role }: MobileNavigationMenuProps) {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Base navigation items
   const baseNavItems = [
@@ -109,17 +79,60 @@ export function NavigationMenu({ role }: NavigationMenuProps) {
   const navItems = [dashboardItem, ...baseNavItems];
 
   return (
-    <nav className="flex items-center gap-1">
-      {navItems.map((item) => (
-        <NavItem
-          key={item.href}
-          href={item.href}
-          current={item.current}
-          icon={item.icon}
-        >
-          {item.label}
-        </NavItem>
-      ))}
-    </nav>
+    <div className="relative">
+      {/* Hamburger Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
+        aria-label="Toggle mobile menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isMobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 z-40" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Mobile Menu */}
+          <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+            <div className="py-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                    item.current 
+                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600" 
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className={`transition-colors duration-200 ${
+                    item.current ? "text-blue-600" : "text-gray-400"
+                  }`}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                  {item.current && (
+                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full" />
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

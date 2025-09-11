@@ -56,7 +56,7 @@ export function FormField({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <Label className={`text-sm font-semibold ${error ? "text-red-600" : "text-gray-700"}`}>
+      <Label className={`text-xs sm:text-sm font-semibold ${error ? "text-red-600" : "text-gray-700"}`}>
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </Label>
@@ -94,8 +94,8 @@ export function FormField({
       </div>
       
       {error && (
-        <div className="flex items-center gap-2 text-sm text-red-600">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-red-600">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           {error}

@@ -37,15 +37,15 @@ export function HeroSection({
         <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white/25 rounded-full animate-bounce" style={{ animationDelay: '2s', animationDuration: '3.5s' }} />
       </div>
       
-      <div className="relative p-6 lg:p-8">
+      <div className="relative p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className={`space-y-2 transform transition-all duration-1000 ease-out ${
             isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
-            <h1 className="text-2xl lg:text-3xl font-medium">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium">
               Welcome{userName ? `, ${userName}` : ""}
             </h1>
-            <p className="text-sm lg:text-base opacity-90 max-w-lg leading-relaxed">
+            <p className="text-sm sm:text-base opacity-90 max-w-lg leading-relaxed">
               {subtitle}
             </p>
           </div>
@@ -57,7 +57,7 @@ export function HeroSection({
               asChild
               variant="outline"
               size="sm"
-              className="!bg-white !text-blue-700 hover:!bg-blue-50 hover:!text-blue-800 !border-blue-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 ease-out"
+              className="!bg-white !text-blue-700 hover:!bg-blue-50 hover:!text-blue-800 !border-blue-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 ease-out w-full sm:w-auto"
             >
               <Link href={actionHref}>
                 <span className="flex items-center gap-2">

@@ -11,24 +11,24 @@ interface FormSectionProps {
 
 export function FormSection({ title, description, icon, children, className = "" }: FormSectionProps) {
   return (
-    <section className={`bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center gap-4">
+    <section className={`bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
+      <div className="p-4 sm:p-6 border-b border-gray-100">
+        <div className="flex items-center gap-3 sm:gap-4">
           {icon && (
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600">
+            <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 flex-shrink-0">
               {icon}
             </div>
           )}
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h2>
             {description && (
-              <p className="text-sm text-gray-600 mt-1">{description}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">{description}</p>
             )}
           </div>
         </div>
       </div>
       
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {children}
       </div>
     </section>
@@ -51,8 +51,8 @@ export function FormGrid({ children, cols = 2, gap = "md" }: FormGridProps) {
 
   const gapClass = {
     sm: "gap-3",
-    md: "gap-4",
-    lg: "gap-6"
+    md: "gap-3 sm:gap-4",
+    lg: "gap-4 sm:gap-6"
   };
 
   return (
@@ -69,7 +69,7 @@ interface FormActionsProps {
 
 export function FormActions({ children, className = "" }: FormActionsProps) {
   return (
-    <div className={`flex items-center justify-between gap-4 pt-6 border-t border-gray-100 ${className}`}>
+    <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-100 ${className}`}>
       {children}
     </div>
   );

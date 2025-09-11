@@ -108,7 +108,7 @@ async function updateApplicationDetails(
     const body = await req.json();
     
     // Handle status updates for borrowers
-    if (body.status) {
+    if (body.status && body.status !== application.status) {
       // Borrowers can only change status from "draft" to "submitted"
       if (userRole === "borrower") {
         if (application.status !== "draft") {

@@ -6,7 +6,7 @@ import { FormField } from "@/components/forms/FormField";
 import { FormSection, FormGrid, FormActions } from "@/components/forms/FormLayout";
 import { StepNavigation } from "@/components/forms/StepNavigation";
 import { DocumentUpload } from "@/components/forms/DocumentUpload";
-import { ErrorDisplay, FieldError, LoadingState } from "@/components/ui/ErrorDisplay";
+import { ErrorDisplay, LoadingState } from "@/components/ui/ErrorDisplay";
 import { FormValidator, CommonRules, ValidationPatterns, validateJsonField } from "@/lib/validation";
 
 type FormState = {
@@ -45,9 +45,11 @@ export default function NewApplicationForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<{file: File, category: string, tempId: string}[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const steps = [
     {
@@ -250,28 +252,100 @@ export default function NewApplicationForm() {
     return v;
   }, [form.employmentStatus, form.purchasePrice]);
 
+  // Clear validation errors when user types in a field
+  const clearFieldError = (fieldName: string) => {
+    if (validationErrors[fieldName]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
   // Validation function
   const validateStep = (stepNumber: number): boolean => {
-    const stepFields: { [key: number]: string[] } = {
-      1: ["firstName", "lastName", "dob", "phone", "currentAddress", "maritalStatus"],
-      2: ["employmentStatus", "employerName", "occupation", "annualIncome"],
-      3: ["propertyAddress", "purchasePrice", "loanAmount", "deposit", "loanPurpose", "propertyType", "occupancy"],
-      4: ["assets", "liabilities", "expenses"]
-    };
+    const errors: Record<string, string> = {};
     
-    const fieldsToValidate = stepFields[stepNumber] || [];
-    const errors = validator.validate(form);
+    switch (stepNumber) {
+      case 1: // Personal Information
+        if (!form.firstName?.trim()) errors.firstName = "First name is required";
+        if (!form.lastName?.trim()) errors.lastName = "Last name is required";
+        if (!form.dob?.trim()) {
+          errors.dob = "Date of birth is required";
+        } else {
+          const date = new Date(form.dob);
+          const today = new Date();
+          const age = today.getFullYear() - date.getFullYear();
+          const monthDiff = today.getMonth() - date.getMonth();
+          const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate()) ? age - 1 : age;
+          
+          if (date > today) {
+            errors.dob = "Date of birth cannot be in the future";
+          } else if (actualAge < 18) {
+            errors.dob = "You must be at least 18 years old to apply";
+          } else if (actualAge > 100) {
+            errors.dob = "Please enter a valid date of birth";
+          }
+        }
+        if (!form.phone?.trim()) errors.phone = "Phone number is required";
+        if (!form.currentAddress?.trim()) errors.currentAddress = "Current address is required";
+        if (!form.maritalStatus?.trim()) errors.maritalStatus = "Marital status is required";
+        break;
+        
+      case 2: // Employment & Income
+        if (!form.employmentStatus?.trim()) errors.employmentStatus = "Employment status is required";
+        if (!form.annualIncome?.trim()) errors.annualIncome = "Annual income is required";
+        if (form.employmentStatus === "employed" && !form.employerName?.trim()) {
+          errors.employerName = "Employer name is required when employed";
+        }
+        if (form.employmentStatus === "employed" && !form.occupation?.trim()) {
+          errors.occupation = "Occupation is required when employed";
+        }
+        break;
+        
+      case 3: // Property & Loan
+        if (!form.propertyAddress?.trim()) errors.propertyAddress = "Property address is required";
+        if (!form.purchasePrice?.trim()) errors.purchasePrice = "Purchase price is required";
+        if (!form.loanAmount?.trim()) errors.loanAmount = "Loan amount is required";
+        if (!form.deposit?.trim()) errors.deposit = "Deposit amount is required";
+        if (!form.loanPurpose?.trim()) errors.loanPurpose = "Loan purpose is required";
+        if (!form.propertyType?.trim()) errors.propertyType = "Property type is required";
+        if (!form.occupancy?.trim()) errors.occupancy = "Occupancy type is required";
+        break;
+        
+      case 4: // Financial Details
+        // Financial details are optional but if provided, should be valid JSON
+        if (form.assets && form.assets.trim()) {
+          try {
+            JSON.parse(form.assets);
+          } catch {
+            errors.assets = "Invalid assets data format";
+          }
+        }
+        if (form.liabilities && form.liabilities.trim()) {
+          try {
+            JSON.parse(form.liabilities);
+          } catch {
+            errors.liabilities = "Invalid liabilities data format";
+          }
+        }
+        if (form.expenses && form.expenses.trim()) {
+          try {
+            JSON.parse(form.expenses);
+          } catch {
+            errors.expenses = "Invalid expenses data format";
+          }
+        }
+        break;
+        
+      case 5: // Documents
+        // Documents are optional for submission but recommended
+        break;
+    }
     
-    // Filter errors for current step
-    const stepErrors: Record<string, string> = {};
-    fieldsToValidate.forEach(field => {
-      if (errors[field]) {
-        stepErrors[field] = errors[field];
-      }
-    });
-    
-    setValidationErrors(stepErrors);
-    return Object.keys(stepErrors).length === 0;
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Validation function that doesn't update state (for checking completion)
@@ -426,13 +500,18 @@ export default function NewApplicationForm() {
         return;
       }
 
-      // Create application
+      // Create application or use existing draft
+      let applicationId = draftId;
+      if (!applicationId) {
       const res = await fetch("/api/applications", { method: "POST" });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to create application. Please try again.");
-      }
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to create application. Please try again.");
+        }
       const created = await res.json();
+        applicationId = created.id;
+        setDraftId(applicationId);
+      }
       // update details
       const payload: any = {
         firstName: form.firstName || null,
@@ -469,7 +548,7 @@ export default function NewApplicationForm() {
         })() : null,
         status: "submitted" // Set status to submitted when borrower submits the form
       };
-      const upd = await fetch(`/api/applications/${created.id}`, {
+      const upd = await fetch(`/api/applications/${applicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -484,7 +563,7 @@ export default function NewApplicationForm() {
         for (const upload of uploadedFiles) {
           const formData = new FormData();
           formData.append('file', upload.file);
-          formData.append('applicationId', created.id);
+          formData.append('applicationId', applicationId!);
           formData.append('category', upload.category);
           
           const uploadResponse = await fetch('/api/upload', {
@@ -498,7 +577,7 @@ export default function NewApplicationForm() {
         }
       }
       
-      router.replace(`/applications/${created.id}`);
+      router.replace(`/applications/${applicationId}`);
     } catch (e: any) {
       console.error("Application submission error:", e);
       
@@ -519,20 +598,20 @@ export default function NewApplicationForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
           {/* Step Navigation */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 order-1">
             <StepNavigation
               currentStep={step}
               totalSteps={steps.length}
               steps={steps}
               onStepClick={(stepNumber) => setStep(stepNumber)}
             />
-      </div>
+          </div>
 
           {/* Form Content */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 order-2 space-y-4 sm:space-y-6">
             {/* Step 1: Personal Information */}
       {step === 1 && (
               <FormSection
@@ -548,7 +627,10 @@ export default function NewApplicationForm() {
                   <FormField
                     label="First Name"
                     value={form.firstName}
-                    onChange={(value) => setForm({ ...form, firstName: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, firstName: value });
+                      clearFieldError("firstName");
+                    }}
                     placeholder="Enter your first name"
                     required
                     error={validationErrors.firstName}
@@ -561,7 +643,10 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Last Name"
                     value={form.lastName}
-                    onChange={(value) => setForm({ ...form, lastName: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, lastName: value });
+                      clearFieldError("lastName");
+                    }}
                     placeholder="Enter your last name"
                     required
                     error={validationErrors.lastName}
@@ -569,17 +654,25 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Date of Birth"
                     value={form.dob}
-                    onChange={(value) => setForm({ ...form, dob: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, dob: value });
+                      clearFieldError("dob");
+                    }}
                     type="date"
                     required
+                    error={validationErrors.dob}
                   />
                   <FormField
                     label="Phone Number"
                     value={form.phone}
-                    onChange={(value) => setForm({ ...form, phone: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, phone: value });
+                      clearFieldError("phone");
+                    }}
                     type="tel"
                     placeholder="04xx xxx xxx"
                     required
+                    error={validationErrors.phone}
                     icon={
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -589,10 +682,14 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Current Address"
                     value={form.currentAddress}
-                    onChange={(value) => setForm({ ...form, currentAddress: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, currentAddress: value });
+                      clearFieldError("currentAddress");
+                    }}
                     placeholder="Street, suburb, state, postcode"
                     className="sm:col-span-2"
                     required
+                    error={validationErrors.currentAddress}
                     icon={
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -603,8 +700,13 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Marital Status"
                     value={form.maritalStatus}
-                    onChange={(value) => setForm({ ...form, maritalStatus: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, maritalStatus: value });
+                      clearFieldError("maritalStatus");
+                    }}
                     placeholder="Single, Married, De facto, etc."
+                    required
+                    error={validationErrors.maritalStatus}
                   />
                   <FormField
                     label="Number of Dependents"
@@ -616,9 +718,25 @@ export default function NewApplicationForm() {
                   />
                 </FormGrid>
                 
+                {Object.keys(validationErrors).length > 0 && (
+                  <ErrorDisplay
+                    type="error"
+                    title="Validation Error"
+                    message="Please complete all required fields before proceeding to the next step."
+                    onDismiss={() => setValidationErrors({})}
+                  />
+                )}
+                
                 <FormActions>
                   <div></div>
-                  <Button onClick={() => setStep(2)} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Button 
+                    onClick={() => {
+                      if (validateStep(1)) {
+                        setStep(2);
+                      }
+                    }} 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
                     Next Step
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -643,9 +761,13 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Employment Status"
                     value={form.employmentStatus}
-                    onChange={(value) => setForm({ ...form, employmentStatus: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, employmentStatus: value });
+                      clearFieldError("employmentStatus");
+                    }}
                     placeholder="PAYG, Self-employed, Contractor, etc."
                     required
+                    error={validationErrors.employmentStatus}
                   />
                   <FormField
                     label="Employer Name"
@@ -653,6 +775,7 @@ export default function NewApplicationForm() {
                     onChange={(value) => setForm({ ...form, employerName: value })}
                     placeholder="Company name"
                     required
+                    error={validationErrors.employerName}
                   />
                   <FormField
                     label="Occupation"
@@ -660,6 +783,7 @@ export default function NewApplicationForm() {
                     onChange={(value) => setForm({ ...form, occupation: value })}
                     placeholder="Your job title"
                     required
+                    error={validationErrors.occupation}
                   />
                   <FormField
                     label="Employment Start Date"
@@ -677,11 +801,15 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Annual Income"
                     value={form.annualIncome}
-                    onChange={(value) => setForm({ ...form, annualIncome: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, annualIncome: value });
+                      clearFieldError("annualIncome");
+                    }}
                     type="number"
                     currency
                     placeholder="0"
                     required
+                    error={validationErrors.annualIncome}
                     helpText="Before tax annual income"
                   />
                   <FormField
@@ -694,6 +822,15 @@ export default function NewApplicationForm() {
                   />
                 </FormGrid>
                 
+                {Object.keys(validationErrors).length > 0 && (
+                  <ErrorDisplay
+                    type="error"
+                    title="Validation Error"
+                    message="Please complete all required fields before proceeding to the next step."
+                    onDismiss={() => setValidationErrors({})}
+                  />
+                )}
+                
                 <FormActions>
                   <Button variant="outline" onClick={() => setStep(1)}>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -701,7 +838,14 @@ export default function NewApplicationForm() {
                     </svg>
                     Previous
                   </Button>
-                  <Button onClick={() => setStep(3)} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Button 
+                    onClick={() => {
+                      if (validateStep(2)) {
+                        setStep(3);
+                      }
+                    }} 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
                     Next Step
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -726,10 +870,14 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Property Address"
                     value={form.propertyAddress}
-                    onChange={(value) => setForm({ ...form, propertyAddress: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, propertyAddress: value });
+                      clearFieldError("propertyAddress");
+                    }}
                     placeholder="Street, suburb, state, postcode"
                     className="sm:col-span-2"
                     required
+                    error={validationErrors.propertyAddress}
                     icon={
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -740,11 +888,15 @@ export default function NewApplicationForm() {
                   <FormField
                     label="Purchase Price"
                     value={form.purchasePrice}
-                    onChange={(value) => setForm({ ...form, purchasePrice: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, purchasePrice: value });
+                      clearFieldError("purchasePrice");
+                    }}
                     type="number"
                     currency
                     placeholder="0"
                     required
+                    error={validationErrors.purchasePrice}
                   />
                   <FormField
                     label="Loan Purpose"
@@ -752,6 +904,7 @@ export default function NewApplicationForm() {
                     onChange={(value) => setForm({ ...form, loanPurpose: value })}
                     placeholder="Purchase, Refinance, Investment"
                     required
+                    error={validationErrors.loanPurpose}
                   />
                   <FormField
                     label="Property Type"
@@ -759,6 +912,7 @@ export default function NewApplicationForm() {
                     onChange={(value) => setForm({ ...form, propertyType: value })}
                     placeholder="House, Unit, Townhouse, Land"
                     required
+                    error={validationErrors.propertyType}
                   />
                   <FormField
                     label="Occupancy"
@@ -766,15 +920,20 @@ export default function NewApplicationForm() {
                     onChange={(value) => setForm({ ...form, occupancy: value })}
                     placeholder="Owner occupied, Investment"
                     required
+                    error={validationErrors.occupancy}
                   />
                   <FormField
                     label="Loan Amount"
                     value={form.loanAmount}
-                    onChange={(value) => setForm({ ...form, loanAmount: value })}
+                    onChange={(value) => {
+                      setForm({ ...form, loanAmount: value });
+                      clearFieldError("loanAmount");
+                    }}
                     type="number"
                     currency
                     placeholder="0"
                     required
+                    error={validationErrors.loanAmount}
                   />
                   <FormField
                     label="Deposit Amount"
@@ -784,6 +943,7 @@ export default function NewApplicationForm() {
                     currency
                     placeholder="0"
                     required
+                    error={validationErrors.deposit}
                   />
                   <FormField
                     label="LVR (%)"
@@ -794,6 +954,15 @@ export default function NewApplicationForm() {
                     helpText="Loan-to-Value Ratio percentage"
                   />
                 </FormGrid>
+                
+                {Object.keys(validationErrors).length > 0 && (
+                  <ErrorDisplay
+                    type="error"
+                    title="Validation Error"
+                    message="Please complete all required fields before proceeding to the next step."
+                    onDismiss={() => setValidationErrors({})}
+                  />
+                )}
                 
                 {error && (
                   <ErrorDisplay
@@ -811,7 +980,14 @@ export default function NewApplicationForm() {
                     </svg>
                     Previous
                   </Button>
-                  <Button onClick={() => setStep(4)} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Button 
+                    onClick={() => {
+                      if (validateStep(3)) {
+                        setStep(4);
+                      }
+                    }} 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
                     Next Step
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -995,6 +1171,15 @@ export default function NewApplicationForm() {
             </div>
             </div>
 
+                {Object.keys(validationErrors).length > 0 && (
+                  <ErrorDisplay
+                    type="error"
+                    title="Validation Error"
+                    message="Please complete all required fields before proceeding to the next step."
+                    onDismiss={() => setValidationErrors({})}
+                  />
+                )}
+
                 {error && (
                   <ErrorDisplay
                     type="error"
@@ -1011,7 +1196,14 @@ export default function NewApplicationForm() {
                     </svg>
                     Previous
                   </Button>
-                  <Button onClick={() => setStep(5)} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Button 
+                    onClick={() => {
+                      if (validateStep(4)) {
+                        setStep(5);
+                      }
+                    }} 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
                     Next Step
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1069,6 +1261,15 @@ export default function NewApplicationForm() {
                   />
                 )}
                 
+                {saving && (
+                  <ErrorDisplay
+                    type="info"
+                    title="Saving Progress"
+                    message="Please wait while we save your progress..."
+                    onDismiss={() => {}}
+                  />
+                )}
+                
                 <FormActions>
                   <Button variant="outline" onClick={() => setStep(4)}>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1081,12 +1282,24 @@ export default function NewApplicationForm() {
                     {/* Save Progress Button */}
                     <Button
                       variant="outline"
+                      disabled={saving}
                       onClick={async () => {
+                        setSaving(true);
+                        setError(null);
                         try {
-                          // Save as draft without validation
-                          const res = await fetch("/api/applications", { method: "POST" });
-                          if (!res.ok) throw new Error("Failed to save draft");
-                          const created = await res.json();
+                          let applicationId = draftId;
+                          
+                          // Create new application only if no draft exists
+                          if (!applicationId) {
+                            const res = await fetch("/api/applications", { method: "POST" });
+                            if (!res.ok) {
+                              const errorText = await res.text();
+                              throw new Error(`Failed to create draft: ${res.status} ${errorText}`);
+                            }
+                            const created = await res.json();
+                            applicationId = created.id;
+                            setDraftId(applicationId);
+                          }
                           
                           const payload: any = {
                             firstName: form.firstName || null,
@@ -1123,19 +1336,24 @@ export default function NewApplicationForm() {
                             status: "draft"
                           };
                           
-                          const upd = await fetch(`/api/applications/${created.id}`, {
+                          const upd = await fetch(`/api/applications/${applicationId}`, {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(payload),
                           });
                           
-                          if (!upd.ok) throw new Error("Failed to save draft");
+                          if (!upd.ok) {
+                            const errorText = await upd.text();
+                            throw new Error(`Failed to save draft: ${upd.status} ${errorText}`);
+                          }
                           
                           // Show success message
                           setError(null);
                           alert("Progress saved successfully!");
                         } catch (e: any) {
                           setError(e.message || "Failed to save progress");
+                        } finally {
+                          setSaving(false);
                         }
                       }}
                       className="px-4 py-2 text-sm"
@@ -1143,7 +1361,7 @@ export default function NewApplicationForm() {
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      Save Progress
+                      {saving ? "Saving..." : "Save Progress"}
                     </Button>
 
                     <Button 

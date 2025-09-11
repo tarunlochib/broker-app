@@ -57,10 +57,7 @@ export async function POST(req: Request) {
       },
     });
     
-    return NextResponse.json({
-      message: "Application created successfully",
-      application: app
-    }, { status: 201 });
+    return NextResponse.json(app, { status: 201 });
   } catch (error) {
     console.error("Error creating application:", error);
     

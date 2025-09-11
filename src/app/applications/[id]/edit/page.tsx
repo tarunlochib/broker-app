@@ -2,11 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import EditApplicationForm from "./EditApplicationForm";
 
-export default async function EditApplicationPage({ params }: { params: { id: string } }) {
+export default async function EditApplicationPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireAuth();
   const userId = (session.user as any).id as string;
   const role = (session.user as any).role as string;
-  const app = await prisma.application.findUnique({ where: { id: params.id } });
+  const resolvedParams = await params;
+  const app = await prisma.application.findUnique({ where: { id: resolvedParams.id } });
   if (!app) return null;
   if (!(role === "admin" || role === "broker") && app.userId !== userId) return null;
   return (

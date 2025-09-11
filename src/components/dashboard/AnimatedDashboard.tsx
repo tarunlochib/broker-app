@@ -99,8 +99,10 @@ export function AnimatedDashboard({ apps, countBy, role }: DashboardProps) {
   return (
     <div className="space-y-8">
       {/* Animated KPI Cards */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${
-        role === 'borrower' ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
+      <div className={`grid gap-3 sm:gap-4 ${
+        role === 'borrower' 
+          ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+          : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
       }`}>
         {kpiCards.map((card) => (
           <div
@@ -135,18 +137,18 @@ export function AnimatedDashboard({ apps, countBy, role }: DashboardProps) {
         <section className={`transform transition-all duration-1000 ease-out ${
           isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
         }`} style={{ transitionDelay: '600ms' }}>
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                   Application Progress Overview
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Track your mortgage journey with real-time status updates
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900">
+              <div className="text-left sm:text-right">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">
                   {apps.length}
                 </div>
                 <div className="text-xs text-gray-500">Total Applications</div>
@@ -154,7 +156,7 @@ export function AnimatedDashboard({ apps, countBy, role }: DashboardProps) {
             </div>
             
             {/* Status Statistics Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4">
               <div className="text-center p-3 bg-white/50 rounded-lg">
                 <div className="text-xl font-bold text-amber-600">
                   {countBy["draft"] ?? 0}
