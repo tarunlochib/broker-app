@@ -89,11 +89,12 @@ async function updateApplicationDetails(
   try {
     const session = await requireAuth();
     const userId = (session.user as { id: string }).id;
+    const userRole = (session.user as { role?: string }).role ?? "borrower";
     
     // Check if the application belongs to the user
     const application = await prisma.application.findUnique({
       where: { id },
-      select: { userId: true }
+      select: { userId: true, status: true }
     });
     
     if (!application) {
@@ -105,6 +106,37 @@ async function updateApplicationDetails(
     }
     
     const body = await req.json();
+    
+    // Handle status updates for borrowers
+    if (body.status) {
+      // Borrowers can only change status from "draft" to "submitted"
+      if (userRole === "borrower") {
+        if (application.status !== "draft") {
+          return NextResponse.json({ 
+            error: "Only draft applications can be submitted" 
+          }, { status: 400 });
+        }
+        
+        if (body.status !== "submitted") {
+          return NextResponse.json({ 
+            error: "Borrowers can only submit applications (change status to 'submitted')" 
+          }, { status: 400 });
+        }
+        
+        // Log the submission
+        await prisma.auditLog.create({
+          data: {
+            action: "application_submitted",
+            meta: {
+              applicationId: id,
+              userId: userId,
+              previousStatus: application.status,
+              newStatus: body.status
+            }
+          }
+        });
+      }
+    }
     
     const updatedApplication = await prisma.application.update({
       where: { id },
@@ -122,7 +154,10 @@ async function updateApplicationDetails(
       }
     });
     
-    return NextResponse.json(updatedApplication, { status: 200 });
+    return NextResponse.json({
+      message: body.status === "submitted" ? "Application submitted successfully" : "Application updated successfully",
+      application: updatedApplication
+    }, { status: 200 });
   } catch (error) {
     console.error("Error updating application details:", error);
     return NextResponse.json({ error: "Failed to update application details" }, { status: 500 });

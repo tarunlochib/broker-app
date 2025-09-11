@@ -467,13 +467,17 @@ export default function NewApplicationForm() {
         expenses: form.expenses && form.expenses.trim() ? (() => {
           try { return JSON.parse(form.expenses); } catch { return null; }
         })() : null,
+        status: "submitted" // Set status to submitted when borrower submits the form
       };
       const upd = await fetch(`/api/applications/${created.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!upd.ok) throw new Error("Failed to save details");
+      if (!upd.ok) {
+        const errorData = await upd.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to submit application. Please try again.");
+      }
       
       // Upload documents after application is created
       if (uploadedFiles.length > 0) {
