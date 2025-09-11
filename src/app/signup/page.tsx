@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
+import { FormValidator, CommonRules, ValidationPatterns } from "@/lib/validation";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,8 +12,24 @@ export default function SignupPage() {
   const handleSubmit = async (data: { email: string; password: string; confirmPassword?: string; name?: string }) => {
     setError(null);
     
+    // Validate input data
+    const validator = new FormValidator();
+    validator
+      .addRule("email", CommonRules.email)
+      .addRule("password", CommonRules.password)
+      .addRule("name", CommonRules.name);
+    
+    const validationErrors = validator.validate(data);
+    
+    // Check password confirmation
     if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match");
+      validationErrors.confirmPassword = "Passwords do not match";
+    }
+    
+    // If there are validation errors, show the first one
+    const firstError = Object.values(validationErrors)[0];
+    if (firstError) {
+      setError(firstError);
       return;
     }
     
@@ -30,7 +48,17 @@ export default function SignupPage() {
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData?.error || "Failed to create account");
+        
+        // Handle specific error cases
+        if (res.status === 409) {
+          throw new Error("An account with this email already exists. Please try signing in instead.");
+        } else if (res.status === 400) {
+          throw new Error(errorData?.error || "Please check your information and try again.");
+        } else if (res.status >= 500) {
+          throw new Error("Server error. Please try again later or contact support.");
+        } else {
+          throw new Error(errorData?.error || "Failed to create account. Please try again.");
+        }
       }
       
       // Auto sign in after successful signup
@@ -41,13 +69,26 @@ export default function SignupPage() {
       });
       
       if (signInRes?.error) {
-        setError("Account created but failed to sign in. Please try signing in manually.");
+        setError("Account created successfully! Please sign in to continue.");
       } else {
         // Redirect based on user role (new users are always borrowers)
         window.location.href = "/dashboard";
       }
     } catch (err: unknown) {
-      setError((err as Error).message || "Something went wrong");
+      console.error("Signup error:", err);
+      
+      const errorMessage = (err as Error).message;
+      
+      // Handle different types of errors
+      if (errorMessage?.includes("network") || errorMessage?.includes("fetch")) {
+        setError("Network error. Please check your internet connection and try again.");
+      } else if (errorMessage?.includes("already exists")) {
+        setError(errorMessage);
+      } else if (errorMessage?.includes("validation") || errorMessage?.includes("required")) {
+        setError("Please check all required fields and try again.");
+      } else {
+        setError(errorMessage || "An unexpected error occurred. Please try again or contact support if the problem persists.");
+      }
     } finally {
       setIsLoading(false);
     }
