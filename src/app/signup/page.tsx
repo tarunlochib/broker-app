@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -8,6 +8,22 @@ import { FormValidator, CommonRules, ValidationPatterns } from "@/lib/validation
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Add auth-page class to html and body for proper background
+    document.documentElement.classList.add('auth-page');
+    document.body.classList.add('auth-page');
+    return () => {
+      document.documentElement.classList.remove('auth-page');
+      document.body.classList.remove('auth-page');
+    };
+  }, []);
 
   const handleSubmit = async (data: { email: string; password: string; confirmPassword?: string; name?: string }) => {
     setError(null);
@@ -95,17 +111,38 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <AuthForm
-          mode="signup"
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          error={error}
-          message={null}
-        />
+    <>
+      {/* Fixed background container */}
+      <div className="auth-page-container bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 w-full overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          
+          {/* Floating particles */}
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400/30 rounded-full animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '3s' }} />
+          <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-indigo-400/40 rounded-full animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '4s' }} />
+          <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-purple-400/35 rounded-full animate-bounce" style={{ animationDelay: '2s', animationDuration: '3.5s' }} />
+          <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-blue-400/30 rounded-full animate-bounce" style={{ animationDelay: '2.5s', animationDuration: '4.5s' }} />
+        </div>
       </div>
-    </div>
+
+      {/* Content container */}
+      <div className="relative min-h-screen w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className={`max-w-md w-full transform transition-all duration-1000 ease-out ${
+          isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        }`}>
+          <AuthForm
+            mode="signup"
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            error={error}
+            message={null}
+          />
+        </div>
+      </div>
+    </>
   );
 }
 

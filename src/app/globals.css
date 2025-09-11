@@ -19,9 +19,30 @@
 html { background: #ffffff !important; }
 
 body {
-  background: #ffffff !important;
+  
   color: #111111 !important;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Allow auth pages to override background */
+body.auth-page {
+  background: transparent !important;
+}
+
+html.auth-page {
+  background: transparent !important;
+}
+
+/* Ensure auth pages cover full viewport */
+.auth-page-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
 }
 
 /* Improve default form control readability */
